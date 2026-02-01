@@ -18,6 +18,7 @@ defmodule HospitalAppWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+    live "/hospital", HospitalLive
   end
 
   # Other scopes may use custom stacks.

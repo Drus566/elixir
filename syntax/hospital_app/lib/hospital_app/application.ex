@@ -15,8 +15,8 @@ defmodule HospitalApp.Application do
       # Start a worker by calling: HospitalApp.Worker.start_link(arg)
       # {HospitalApp.Worker, arg},
       # Start to serve requests, typically the last entry
+      {HospitalApp.Registry, []}, # Твой реестр
       HospitalAppWeb.Endpoint,
-      Hospital.Registry
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
