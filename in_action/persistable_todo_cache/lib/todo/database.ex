@@ -7,7 +7,7 @@ defmodule Todo.Database do
     GenServer.start(__MODULE__, nil, name: __MODULE__) # Локальная регистрация процесса
   end
 
-  def store(key, value) do
+  def store(key, data) do
     GenServer.cast(__MODULE__, {:store, key, data})
   end
 
@@ -21,19 +21,30 @@ defmodule Todo.Database do
   end
 
   def handle_cast({:store, key, data}, state) do
-    key
-    |> file_name()
-    |> File.write!(:erlang.term_to_binary(data))
+    # Обрабатывается в порожденном процессе
+    spawn(fn ->
+      key
+      |> file_name()
+      |> File.write!(:erlang.term_to_binary(data))
+    end)
 
     {:noreply, state}
   end
 
-  def handle_call({:get, key}, _, state) do
-    data = case File.read(file_name(key)) do
-      {:ok, contents} -> :erlang.binary_to_term(contents)
-      _ -> nil
-    end
-    {:reply, data, state}
+  # caller - pid вызывающего процесса
+  def handle_call({:get, key}, caller, state) do
+    # Порождение процесса для считывания данных
+    spawn(fn ->
+      data = case File.read(file_name(key)) do
+        {:ok, contents} -> :erlang.binary_to_term(contents)
+        _ -> nil
+      end
+
+      # Отправляем ответ по pid вызывающего процесса
+      GenServer.reply(caller,data) # Отправка ответа от порожденного процесса
+    end)
+
+    {:noreply,state} # Процесс БД ответ не отправляет
   end
 
   defp file_name(key) do
